@@ -186,11 +186,11 @@
             <span>Покормить вкусняшкой</span>
         </button>
 
-        <!-- НОВЫЙ БЛОК: Поле ввода текста и кнопка отправки -->
+        
         <div class="text-input-container">
             <input type="text" id="msgInput" class="message-input" placeholder="Напиши кисику..." maxlength="16">
             <button class="btn btn-send" onclick="sendTextMessage()">
-                <span>💬 Отправить записку</span>
+                <span>Отправить записку</span>
             </button>
         </div>
 
@@ -239,24 +239,24 @@
 
         async function sendCommand(cmd) {
             if (!bleCharacteristic) { 
-                alert("Сначала нажмите кнопку подключения по Bluetooth!"); 
+                alert("Сначала нажмите кнопку подключения по Bluetooth"); 
                 return; 
             }
             try {
                 const encoder = new TextEncoder();
                 await bleCharacteristic.writeValue(encoder.encode(cmd));
             } catch (error) {
-                alert("Связь потеряна. Попробуйте обновить страницу.");
+                alert("Связь потеряна. Попробуйте обновить страницу...");
             }
         }
 
-        // НОВАЯ ФУНКЦИЯ: Считывает текст из поля ввода и отправляет его в ESP32
+        
         async function sendTextMessage() {
             const inputField = document.getElementById('msgInput');
             const text = inputField.value.trim();
             
             if (!text) {
-                alert("Сначала введите текст!");
+                alert("Сначала введите текст");
                 return;
             }
             
