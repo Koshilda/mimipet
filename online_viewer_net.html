@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitomets</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --card-bg: #1e293b;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --heart: #f071d4;
+            --feed: #ffb282;
+            --success: #c7ff82;
+        }
+
+        body {
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 50%;
+            max-width: 400px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 30px 24px;
+            text-align: center;
+            border: 1px solid #334155;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: #ffffff;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-connect {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-heart {
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-feed {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #334155;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .status-connected {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        
+        .ios-notice {
+            background-color: #1e293b;
+            border: 1px dashed #475569;
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: left;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .ios-notice b {
+            color: var(--text-main);
+        }
+        
+    </style>
+    
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Питомец-кисик</h1>
+        <div class="subtitle">Для Маман <3</div>
+
+        <div class="status-badge" id="statusBadge">Статус: Отключен</div>
+
+        <button class="btn btn-connect" id="connectBtn">
+            <span>Подключить по Bluetooth</span>
+        </button>
+        
+        <button class="btn btn-heart" onclick="sendCommand('1')">
+            <span>💖 Люблю тебя!!!</span>
+        </button>
+        
+        <button class="btn btn-feed" onclick="sendCommand('2')">
+            <span>Покормить вкусняшкой</span>
+        </button>
+
+        <div class="ios-notice" id="iosNotice">
+            ℹ️ <b>Для пользователей iPhone (iOS):</b> Стандартный браузер Safari не поддерживает управление по Bluetooth. Пожалуйста, установите бесплатный браузер <b>Bluefy</b> из App Store и откройте этот сайт через него.
+        </div>
+    </div>
+
+    <script>
+        const SERVICE_UUID = "4faac861-1966-4d2f-85ef-9ccca49b86ff";
+        const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+        
+        let bleCharacteristic = null;
+        const connectBtn = document.getElementById('connectBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const iosNotice = document.getElementById('iosNotice');
+
+        
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            iosNotice.style.display = "block";
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            try {
+                statusBadge.innerText = "Статус: Поиск питомца";
+                
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [SERVICE_UUID] }]
+                });
+                
+                statusBadge.innerText = "Статус: Соединение";
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+                
+                statusBadge.innerText = "Статус: Подключен";
+                statusBadge.classList.add('status-connected');
+                connectBtn.style.display = "none"; // Прячем кнопку подключения после успеха
+            } catch (error) {
+                console.log(error);
+                statusBadge.innerText = "Статус: Ошибка";
+                statusBadge.classList.remove('status-connected');
+                alert("Не удалось подключиться: " + error.message);
+            }
+        });
+
+        async function sendCommand(cmd) {
+            if (!bleCharacteristic) { 
+                alert("Сначала нажмите кнопку подключения по Bluetooth!"); 
+                return; 
+            }
+            try {
+                const encoder = new TextEncoder();
+                await bleCharacteristic.writeValue(encoder.encode(cmd));
+            } catch (error) {
+                alert("Связь потеряна. Попробуйте обновить страницу.");
+            }
+        }
+    </script>
+</body>
+</html>
