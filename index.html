@@ -30,14 +30,15 @@
         }
 
         .container {
-            width: 50%;
+            width: 100%; /* Исправлено с 50% для лучшего отображения на смартфонах */
             max-width: 450px;
             background: var(--card-bg);
             border-radius: 10px;
-            padding: 15px 16px;
+            padding: 25px 16px;
             text-align: center;
             border: 1px solid #334155;
             margin-top: 20px;
+            box-sizing: border-box;
         }
 
         h1 {
@@ -95,6 +96,41 @@
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         }
 
+        /* Стили для блока отправки сообщения */
+        .text-input-container {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 16px;
+            border-radius: 20px;
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: #ffffff;
+            outline: none;
+            box-sizing: border-box;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #1e90ff, #0052cc);
+            color: white;
+            margin-bottom: 0; /* Обнуляем нижний отступ для последнего элемента */
+            box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+        }
+
         .status-badge {
             display: inline-block;
             padding: 6px 12px;
@@ -111,7 +147,6 @@
             color: var(--success);
         }
 
-        
         .ios-notice {
             background-color: #1e293b;
             border: 1px dashed #475569;
@@ -128,16 +163,14 @@
         .ios-notice b {
             color: var(--text-main);
         }
-        
     </style>
-    
 </head>
 
 <body>
 
     <div class="container">
         <h1>Питомец-кисик</h1>
-        <div class="subtitle">Для Маман <3</div>
+        <div class="subtitle">Для Маман &lt;3</div>
 
         <div class="status-badge" id="statusBadge">Статус: Отключен</div>
 
@@ -153,6 +186,14 @@
             <span>Покормить вкусняшкой</span>
         </button>
 
+        <!-- НОВЫЙ БЛОК: Поле ввода текста и кнопка отправки -->
+        <div class="text-input-container">
+            <input type="text" id="msgInput" class="message-input" placeholder="Напиши кисику..." maxlength="16">
+            <button class="btn btn-send" onclick="sendTextMessage()">
+                <span>💬 Отправить записку</span>
+            </button>
+        </div>
+
         <div class="ios-notice" id="iosNotice">
             ℹ️ <b>Для пользователей iPhone (iOS):</b> Safari не поддерживает управление по Bluetooth. Установи бесплатный браузер <b>Bluefy</b>.
         </div>
@@ -167,7 +208,6 @@
         const statusBadge = document.getElementById('statusBadge');
         const iosNotice = document.getElementById('iosNotice');
 
-        
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIOS) {
             iosNotice.style.display = "block";
@@ -188,7 +228,7 @@
                 
                 statusBadge.innerText = "Статус: Подключен";
                 statusBadge.classList.add('status-connected');
-                connectBtn.style.display = "none"; // Прячем кнопку подключения после успеха
+                connectBtn.style.display = "none"; 
             } catch (error) {
                 console.log(error);
                 statusBadge.innerText = "Статус: Ошибка";
@@ -208,6 +248,23 @@
             } catch (error) {
                 alert("Связь потеряна. Попробуйте обновить страницу.");
             }
+        }
+
+        // НОВАЯ ФУНКЦИЯ: Считывает текст из поля ввода и отправляет его в ESP32
+        async function sendTextMessage() {
+            const inputField = document.getElementById('msgInput');
+            const text = inputField.value.trim();
+            
+            if (!text) {
+                alert("Сначала введите текст!");
+                return;
+            }
+            
+            // Отправляем строку в плату
+            await sendCommand(text);
+            
+            // Очищаем поле ввода после успешной отправки
+            inputField.value = "";
         }
     </script>
 </body>
